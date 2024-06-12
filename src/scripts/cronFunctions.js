@@ -2,6 +2,7 @@ const MssqlOrder = require("../models/MssqlOrder");
 const MssqlInvoice = require("../models/MssqlInvoice");
 const PostgresOrder = require("../models/PostgresOrder");
 const PostgresInvoice = require("../models/PostgresInvoice");
+const TableLock = require("../models/TableLock");
 const { Op } = require("sequelize");
 const BATCH_SIZE = parseInt(process.env.BATCH_SIZE, 1000);
 
@@ -44,17 +45,32 @@ const processBatch = async (model, targetModel, where, batchSize) => {
 
 const processInvoice = async () => {
   try {
-    const cond = await PostgresInvoice.findOne({
-      order: [["row_modified_on", "DESC"]],
-      attributes: ["row_unique_id", "row_modified_on"],
+    const lock = await TableLock.findOne({
+      where: { id: 1 },
     });
-    if (cond) {
-      const condition = {
-        row_unique_id: { [Op.gt]: cond?.dataValues?.row_unique_id },
-      };
-      await processBatch(MssqlInvoice, PostgresInvoice, condition, BATCH_SIZE);
+    if (lock?.dataValues.is_locked === false) {
+      const cond = await PostgresInvoice.findOne({
+        order: [["row_modified_on", "DESC"]],
+        attributes: ["row_unique_id", "row_modified_on"],
+      });
+      if (cond) {
+        const condition = {
+          row_unique_id: { [Op.gt]: cond?.dataValues?.row_unique_id },
+        };
+        await TableLock.update({ is_locked: true }, { where: { id: 1 } });
+        await processBatch(
+          MssqlInvoice,
+          PostgresInvoice,
+          condition,
+          BATCH_SIZE
+        );
+        await TableLock.update({ is_locked: false }, { where: { id: 1 } });
+      }
+    } else {
+      console.error("ar invoice table is locked.");
     }
   } catch (error) {
+    await TableLock.update({ is_locked: false }, { where: { id: 1 } });
     console.error("Error during batch processing:", error);
     throw error;
   }
@@ -62,17 +78,27 @@ const processInvoice = async () => {
 
 const processJobHistory = async () => {
   try {
-    const cond = await PostgresOrder.findOne({
-      order: [["row_modified_on", "DESC"]],
-      attributes: ["row_unique_id", "row_modified_on"],
+    const lock = await TableLock.findOne({
+      where: { id: 2 },
     });
-    if (cond) {
-      const condition = {
-        row_unique_id: { [Op.gt]: cond?.dataValues?.row_unique_id },
-      };
-      await processBatch(MssqlOrder, PostgresOrder, condition, BATCH_SIZE);
+    if (lock?.dataValues.is_locked === false) {
+      const cond = await PostgresOrder.findOne({
+        order: [["row_modified_on", "DESC"]],
+        attributes: ["row_unique_id", "row_modified_on"],
+      });
+      if (cond) {
+        const condition = {
+          row_unique_id: { [Op.gt]: cond?.dataValues?.row_unique_id },
+        };
+        await TableLock.update({ is_locked: true }, { where: { id: 2 } });
+        await processBatch(MssqlOrder, PostgresOrder, condition, BATCH_SIZE);
+        await TableLock.update({ is_locked: false }, { where: { id: 2 } });
+      }
+    } else {
+      console.error("job history table is locked.");
     }
   } catch (error) {
+    await TableLock.update({ is_locked: false }, { where: { id: 2 } });
     console.error("Error during batch processing:", error);
     throw error;
   }

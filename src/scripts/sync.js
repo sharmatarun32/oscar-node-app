@@ -4,6 +4,7 @@ const MssqlOrder = require("../models/MssqlOrder");
 const MssqlInvoice = require("../models/MssqlInvoice");
 const PostgresOrder = require("../models/PostgresOrder");
 const PostgresInvoice = require("../models/PostgresInvoice");
+const TableLock = require("../models/TableLock");
 
 const syncModels = async () => {
   try {

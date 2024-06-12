@@ -1,6 +1,5 @@
 const express = require("express");
 require("dotenv").config();
-// require("./scheduler");
 require("./src/scripts/sync");
 const route = require("./src/routes");
 

@@ -10,7 +10,7 @@ const { getPageAndLimit } = require("../scripts/helper");
 async function runInvoiceData(req, res) {
   try {
     await processInvoice();
-    return res.status(200).json("completed......");
+    return res.status(200).json("completed!");
   } catch (error) {
     console.error(error);
     return res.status(500).json(error);
@@ -20,7 +20,7 @@ async function runInvoiceData(req, res) {
 async function runJobHistory(req, res) {
   try {
     await processJobHistory();
-    return res.status(200).json("completed......");
+    return res.status(200).json("completed!");
   } catch (error) {
     console.error(error);
     return res.status(500).json(error);
@@ -29,16 +29,34 @@ async function runJobHistory(req, res) {
 
 async function getInvoiceData(req, res) {
   try {
-    const param = req.body;
+    const { fromDate, toDate, ...param } = req.query;
     const { skip, limit, page } = getPageAndLimit(param);
-    const data = await PostgresInvoice.findAll({
-      order: [["row_modified_on", "DESC"]],
-      offset: skip,
-      limit,
+
+    const dataCount = await PostgresInvoice.count({
+      where: {
+        row_modified_on: {
+          [Op.gte]: fromDate,
+          [Op.lte]: toDate,
+        },
+      },
     });
+    let data;
+    if (dataCount > 0) {
+      data = await PostgresInvoice.findAll({
+        where: {
+          row_modified_on: {
+            [Op.gte]: fromDate,
+            [Op.lte]: toDate,
+          },
+        },
+        order: [["row_modified_on", "DESC"]],
+        offset: skip,
+        limit,
+      });
+    }
     const result = {
       data,
-      total: data.length || 0,
+      total: dataCount || 0,
       page,
       limit,
     };
@@ -49,16 +67,27 @@ async function getInvoiceData(req, res) {
 }
 
 async function getJobHistory(req, res) {
-  const param = req.body;
+  const { fromDate, toDate, ...param } = req.query;
   const { skip, limit, page } = getPageAndLimit(param);
-  const data = await PostgresOrder.findAll({
-    order: [["row_modified_on", "DESC"]],
-    offset: skip,
-    limit,
+  const dataCount = await PostgresOrder.count({
+    where: {
+      row_modified_on: {
+        [Op.gte]: fromDate,
+        [Op.lte]: toDate,
+      },
+    },
   });
+  let data;
+  if (dataCount > 0) {
+    data = await PostgresOrder.findAll({
+      order: [["row_modified_on", "DESC"]],
+      offset: skip,
+      limit,
+    });
+  }
   const result = {
     data,
-    total: data.length || 0,
+    total: dataCount || 0,
     page,
     limit,
   };

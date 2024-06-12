@@ -7,11 +7,12 @@ const {
   getJobHistory,
 } = require("../controllers/getDataController");
 const basicAuth = require("../middleware/auth");
+const { reqValidate } = require("../requestValidator");
 
-router.get("/runInvoiceData", basicAuth, runInvoiceData);
-router.get("/runJobHistory", basicAuth, runJobHistory);
+router.post("/runInvoiceData", basicAuth, runInvoiceData);
+router.post("/runJobHistory", basicAuth, runJobHistory);
 
-router.post("/getInvoiceData", basicAuth, getInvoiceData);
-router.post("/getJobHistory", basicAuth, getJobHistory);
+router.get("/getInvoiceData", basicAuth, reqValidate, getInvoiceData);
+router.get("/getJobHistory", basicAuth, reqValidate, getJobHistory);
 
 module.exports = router;
