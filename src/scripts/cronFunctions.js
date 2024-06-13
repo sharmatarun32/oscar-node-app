@@ -6,7 +6,7 @@ const TableLock = require("../models/TableLock");
 const { Op } = require("sequelize");
 require("dotenv").config();
 
-const BATCH_SIZE = parseInt(process.env.BATCH_SIZE, 1000);
+const BATCH_SIZE = parseInt(process.env.BATCH_SIZE) || 1000;
 
 const processBatch = async (model, targetModel, where, batchSize) => {
   let offset = 0;
@@ -21,7 +21,6 @@ const processBatch = async (model, targetModel, where, batchSize) => {
         offset,
         limit: batchSize,
       });
-
       if (records.length > 0) {
         const recordData = records.map((record) => record.toJSON());
 
