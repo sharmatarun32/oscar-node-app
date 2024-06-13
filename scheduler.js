@@ -1,4 +1,6 @@
 const cron = require("node-cron");
+require("dotenv").config();
+
 const {
   processInvoice,
   processJobHistory,
@@ -6,6 +8,7 @@ const {
 
 const syncData = async () => {
   try {
+    console.log("---------sync data initialized------------");
     await processInvoice();
 
     await processJobHistory();

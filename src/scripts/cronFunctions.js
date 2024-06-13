@@ -4,6 +4,8 @@ const PostgresOrder = require("../models/PostgresOrder");
 const PostgresInvoice = require("../models/PostgresInvoice");
 const TableLock = require("../models/TableLock");
 const { Op } = require("sequelize");
+require("dotenv").config();
+
 const BATCH_SIZE = parseInt(process.env.BATCH_SIZE, 1000);
 
 const processBatch = async (model, targetModel, where, batchSize) => {
