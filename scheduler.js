@@ -19,7 +19,9 @@ const syncData = async () => {
   }
 };
 
-cron.schedule(process.env.CRON_SCHEDULE, syncData, {
+const cronScd = process.env.CRON_SCHEDULE || '15 8 * * *';
+
+cron.schedule(cronScd, syncData, {
   scheduled: true,
   timezone: "UTC",
 });
