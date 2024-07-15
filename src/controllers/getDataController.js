@@ -80,6 +80,12 @@ async function getJobHistory(req, res) {
   let data;
   if (dataCount > 0) {
     data = await PostgresOrder.findAll({
+      where: {
+        row_modified_on: {
+          [Op.gte]: fromDate,
+          [Op.lte]: toDate,
+        },
+      },
       order: [["row_modified_on", "DESC"]],
       offset: skip,
       limit,
