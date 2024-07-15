@@ -52,6 +52,24 @@ async function getInvoiceData(req, res) {
         order: [["row_modified_on", "DESC"]],
         offset: skip,
         limit,
+        attributes: [
+          "invoice_no",
+          "posted_flag",
+          "customer_no",
+          "description",
+          "invoice_date",
+          "transaction_date",
+          "post_date",
+          "estimate_no",
+          "job_no",
+          "invoice_amount",
+          "customer_id",
+          "estimate_id",
+          "invoice_id",
+          "job_id",
+          "row_unique_id",
+          "row_modified_on",
+        ],
       });
     }
     const result = {
@@ -89,6 +107,22 @@ async function getJobHistory(req, res) {
       order: [["row_modified_on", "DESC"]],
       offset: skip,
       limit,
+      attributes: [
+        "job_no",
+        "cost_class_no",
+        "date_booked",
+        "transaction_no",
+        "date_posted",
+        "cost",
+        "units",
+        "quantity",
+        "vendor_no",
+        "job_id",
+        "vendor_id",
+        "datetime_posted",
+        "row_unique_id",
+        "row_modified_on",
+      ],
     });
   }
   const result = {
