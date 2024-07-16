@@ -3,7 +3,12 @@ const MssqlInvoice = require("../models/MssqlInvoice");
 const PostgresOrder = require("../models/PostgresOrder");
 const PostgresInvoice = require("../models/PostgresInvoice");
 const TableLock = require("../models/TableLock");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
+const {
+  UPDATE_PROCESS_DAY,
+  INVOICE_TABLE_LOCK_ID,
+  JOB_HISTORY_TABLE_LOCK_ID,
+} = require("../config/constant");
 require("dotenv").config();
 
 const BATCH_SIZE = parseInt(process.env.BATCH_SIZE) || 1000;
@@ -105,8 +110,104 @@ const processJobHistory = async () => {
   }
 };
 
+const processUpdateInvoice = async () => {
+  await processUpdate(MssqlInvoice, PostgresInvoice, INVOICE_TABLE_LOCK_ID);
+};
+
+const processUpdateJobHistory = async () => {
+  await processUpdate(MssqlOrder, PostgresOrder, JOB_HISTORY_TABLE_LOCK_ID);
+};
+
+const processUpdate = async (sourceModel, targetModel, lockId) => {
+  try {
+    const toDate = new Date();
+    const fromDate = new Date(
+      toDate.getTime() - UPDATE_PROCESS_DAY * 24 * 60 * 60 * 1000
+    );
+    const toDateString = toDate.toISOString();
+    const fromDateString = fromDate.toISOString();
+
+    const condition = {
+      row_modified_on: {
+        [Op.gte]: Sequelize.fn(
+          "CONVERT",
+          Sequelize.literal(`DATETIME, '${fromDateString}'`)
+        ),
+        [Op.lte]: Sequelize.fn(
+          "CONVERT",
+          Sequelize.literal(`DATETIME, '${toDateString}'`)
+        ),
+      },
+    };
+
+    const updateCount = await sourceModel.count({
+      where: condition,
+    });
+
+    console.log("update count>>>>", updateCount);
+
+    if (updateCount > 0) {
+      const batchCount = Math.ceil(updateCount / 4) || 1;
+
+      await TableLock.update({ is_locked: true }, { where: { id: lockId } });
+
+      await processUpdateBatch(sourceModel, targetModel, condition, batchCount);
+
+      await TableLock.update({ is_locked: false }, { where: { id: lockId } });
+    }
+  } catch (error) {
+    console.error(`Error during process update for lockId ${lockId}:`, error);
+    throw error;
+  }
+};
+
+const processUpdateBatch = async (model, targetModel, where, batchSize) => {
+  let offset = 0;
+  let moreRecords = true;
+  let successCount = 0;
+  console.log(`Update batch process Started...................`);
+
+  try {
+    while (moreRecords) {
+      const records = await model.findAll({
+        where,
+        offset,
+        limit: batchSize,
+      });
+
+      if (records.length > 0) {
+        const updatePromises = records.map(async (rec) => {
+          console.log("processed row unique id: ", rec.row_unique_id);
+          const recordData = rec.toJSON();
+          return targetModel.update(recordData, {
+            where: { row_unique_id: rec.row_unique_id },
+          });
+        });
+
+        await Promise.all(updatePromises);
+        offset += records.length;
+        successCount += records.length;
+        console.log(`Processed ${successCount} records.`);
+      } else {
+        moreRecords = false;
+      }
+    }
+
+    console.log(`Successfully added/updated ${successCount} records.`);
+    console.log(`Batch process Completed...................`);
+    return successCount;
+  } catch (error) {
+    console.error("Error during processUpdateBatch processing:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   processBatch,
   processInvoice,
   processJobHistory,
+  processUpdate,
+  processUpdateInvoice,
+  processUpdateJobHistory,
+  processUpdateBatch,
 };

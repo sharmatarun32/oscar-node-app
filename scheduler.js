@@ -4,6 +4,8 @@ require("dotenv").config();
 const {
   processInvoice,
   processJobHistory,
+  processUpdateInvoice,
+  processUpdateJobHistory,
 } = require("./src/scripts/cronFunctions");
 
 const syncData = async () => {
@@ -13,17 +15,25 @@ const syncData = async () => {
 
     await processJobHistory();
 
+    await processUpdateInvoice();
+
+    await processUpdateJobHistory();
+
     console.log("Data synced successfully.");
   } catch (error) {
     console.error("Error syncing data:", error);
   }
 };
 
-const cronScd = process.env.CRON_SCHEDULE || '20 8 * * *';
+const cronScd = process.env.CRON_SCHEDULE || "20 8 * * *";
 console.log(cronScd);
-cron.schedule(cronScd, () => {
-  syncData();
-}, {
-  scheduled: true,
-  timezone: "UTC",
-});
+cron.schedule(
+  cronScd,
+  () => {
+    syncData();
+  },
+  {
+    scheduled: true,
+    timezone: "UTC",
+  }
+);

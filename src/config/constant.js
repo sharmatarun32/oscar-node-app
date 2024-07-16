@@ -1,0 +1,5 @@
+module.exports = {
+  INVOICE_TABLE_LOCK_ID: 1,
+  JOB_HISTORY_TABLE_LOCK_ID: 2,
+  UPDATE_PROCESS_DAY: 1,
+};
