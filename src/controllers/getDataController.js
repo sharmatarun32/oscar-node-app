@@ -113,6 +113,7 @@ async function getJobHistory(req, res) {
       limit,
       attributes: [
         "job_no",
+        "earn_type_no",
         "cost_class_no",
         "date_booked",
         "transaction_no",
