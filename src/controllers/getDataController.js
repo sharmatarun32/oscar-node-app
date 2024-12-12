@@ -75,6 +75,7 @@ async function getInvoiceData(req, res) {
           "original_release_retainage_amount",
           "adjust_release_retainage_amount",
           "adjust_amount_due",
+          "original_invoice_amount",
           "row_unique_id",
           "row_modified_on",
         ],
