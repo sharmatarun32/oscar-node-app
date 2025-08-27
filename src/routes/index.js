@@ -1,18 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const {
-  runInvoiceData,
-  runJobHistory,
-  getInvoiceData,
-  getJobHistory,
+  runJobCostData,
+  getJobCostData,
+
 } = require("../controllers/getDataController");
 const basicAuth = require("../middleware/auth");
 const { reqValidate } = require("../requestValidator");
 
-router.post("/runInvoiceData", basicAuth, runInvoiceData);
-router.post("/runJobHistory", basicAuth, runJobHistory);
+router.post("/runJobCostData", basicAuth, runJobCostData);
 
-router.get("/getInvoiceData", basicAuth, reqValidate, getInvoiceData);
-router.get("/getJobHistory", basicAuth, reqValidate, getJobHistory);
+router.get("/getJobCostData", basicAuth, reqValidate, getJobCostData);
 
 module.exports = router;

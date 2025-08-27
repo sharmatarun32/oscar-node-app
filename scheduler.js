@@ -2,22 +2,17 @@ const cron = require("node-cron");
 require("dotenv").config();
 
 const {
-  processInvoice,
-  processJobHistory,
-  processUpdateInvoice,
-  processUpdateJobHistory,
+  processJobCost,
+  processUpdateJobCost,
 } = require("./src/scripts/cronFunctions");
 
 const syncData = async () => {
   try {
     console.log("---------sync data initialized------------");
-    await processInvoice();
 
-    await processJobHistory();
+    await processJobCost();
 
-    await processUpdateInvoice();
-
-    await processUpdateJobHistory();
+    await processUpdateJobCost();
 
     console.log("Data synced successfully.");
   } catch (error) {
