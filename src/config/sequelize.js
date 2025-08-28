@@ -25,11 +25,11 @@ const mssqlSequelize = new Sequelize(
   {
     host: process.env.MSSQL_HOST,
     dialect: "mssql",
-    port: process.env.MSSQL_PORT,
     dialectOptions: {
       options: {
         encrypt: false,
         trustServerCertificate: true,
+        port: 9000
       },
     },
     logging: false,
