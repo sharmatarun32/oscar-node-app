@@ -29,7 +29,7 @@ const mssqlSequelize = new Sequelize(
       options: {
         encrypt: false,
         trustServerCertificate: true,
-        port: 9000
+        port: 9000,
       },
     },
     logging: false,
