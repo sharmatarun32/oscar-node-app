@@ -28,4 +28,3 @@ jobs:
     - run: |
         touch .env
         echo "${{ secrets.DEVELOPMENT }}T" > .env
-    - run: pm2 restart Testing
