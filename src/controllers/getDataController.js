@@ -26,7 +26,7 @@ async function getJobCostData(req, res) {
     let data;
     if (dataCount > 0) {
       data = await PostgresJobCost.findAll({
-        order: [["account_no", "DESC"]],
+        order: [["id", "DESC"]],
         offset: skip,
         limit,
         attributes: [
