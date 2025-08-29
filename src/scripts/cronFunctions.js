@@ -55,13 +55,13 @@ const processJobCost = async () => {
 
     if (lock?.dataValues.is_locked === false) {
       const cond = await PostgresJobCost.findOne({
-        order: [["row_modified_on", "DESC"]],
-        attributes: ["row_unique_id", "row_modified_on"],
+        order: [["id", "DESC"]],
+        attributes: ["id"],
       });
 
       if (cond) {
         const condition = {
-          row_unique_id: { [Op.gt]: cond?.dataValues?.row_unique_id },
+        id: { [Op.gt]: cond.dataValues.id }
         };
 
         
@@ -94,29 +94,7 @@ const processUpdateJobCost = async () => {
 
 const processUpdate = async (sourceModel, targetModel, lockId) => {
   try {
-    const toDate = new Date();
-    const fromDate = new Date(
-      toDate.getTime() - UPDATE_PROCESS_DAY * 24 * 60 * 60 * 1000
-    );
-    const toDateString = toDate.toISOString();
-    const fromDateString = fromDate.toISOString();
-
-    const condition = {
-      row_modified_on: {
-        [Op.gte]: Sequelize.fn(
-          "CONVERT",
-          Sequelize.literal(`DATETIME, '${fromDateString}'`)
-        ),
-        [Op.lte]: Sequelize.fn(
-          "CONVERT",
-          Sequelize.literal(`DATETIME, '${toDateString}'`)
-        ),
-      },
-    };
-
-    const updateCount = await sourceModel.count({
-      where: condition,
-    });
+    const updateCount = await sourceModel.count();   
 
     console.log("update count>>>>", updateCount);
 
@@ -125,15 +103,17 @@ const processUpdate = async (sourceModel, targetModel, lockId) => {
 
       await TableLock.update({ is_locked: true }, { where: { id: lockId } });
 
-      await processUpdateBatch(sourceModel, targetModel, condition, batchCount);
+      await processUpdateBatch(sourceModel, targetModel, {}, batchCount); // ✅ no condition
 
       await TableLock.update({ is_locked: false }, { where: { id: lockId } });
     }
   } catch (error) {
+    await TableLock.update({ is_locked: false }, { where: { id: lockId } });
     console.error(`Error during process update for lockId ${lockId}:`, error);
     throw error;
   }
 };
+
 
 const processUpdateBatch = async (model, targetModel, where, batchSize) => {
   let offset = 0;
@@ -151,10 +131,11 @@ const processUpdateBatch = async (model, targetModel, where, batchSize) => {
 
       if (records.length > 0) {
         const updatePromises = records.map(async (rec) => {
-          console.log("processed row unique id: ", rec.row_unique_id);
+          console.log("processed row id: ", rec.id);  
           const recordData = rec.toJSON();
+
           return targetModel.update(recordData, {
-            where: { row_unique_id: rec.row_unique_id },
+            where: { id: rec.id },   
           });
         });
 
